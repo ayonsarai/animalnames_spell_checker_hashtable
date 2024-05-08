@@ -14,10 +14,35 @@ class HashTable:
     def check_word(self, word):
         return word.lower() in self.table
 
+    def levenshtein_distance(self, word1, word2):
+        size_x = len(word1) + 1
+        size_y = len(word2) + 1
+        matrix = [[0 for _ in range(size_y)] for _ in range(size_x)]
+        for x in range(size_x):
+            matrix [x][0] = x
+        for y in range(size_y):
+            matrix [0][y] = y
+
+        for x in range(1, size_x):
+            for y in range(1, size_y):
+                if word1[x-1] == word2[y-1]:
+                    matrix [x][y] = min(
+                        matrix[x-1][y] + 1,
+                        matrix[x-1][y-1],
+                        matrix[x][y-1] + 1
+                    )
+                else:
+                    matrix [x][y] = min(
+                        matrix[x-1][y] + 1,
+                        matrix[x-1][y-1] + 1,
+                        matrix[x][y-1] + 1
+                    )
+        return matrix[size_x - 1][size_y - 1]
+
     def get_suggestions(self, word):
-        first_letter = word[0].lower()
-        suggestions = [w for w in self.table if w.startswith(first_letter)]
-        return suggestions[:3]
+        distances = [(w, self.levenshtein_distance(word, w)) for w in self.table]
+        suggestions = sorted(distances, key=lambda x: x[1])
+        return [s[0] for s in suggestions[:3]]
 
 def check_spelling(text, hash_table):
     words = text.split()
